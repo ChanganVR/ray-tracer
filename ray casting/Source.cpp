@@ -9,19 +9,49 @@
 #include "ray.h"
 #include "camera.h"
 #include "group.h"
+#include "light.h"
+
+Vec3f compute_diffuse_color(const Hit &h, const Ray &r, Vec3f ambient_light, int num_lights, Light **lights, bool is_shade_back)
+{
+	Vec3f object_color = h.getMaterial()->getDiffuseColor();
+	Vec3f object_normal = h.getNormal();
+	if (object_normal.Dot3(r.getDirection()) > 0)//view point is in the backside of the object
+	{
+		if (is_shade_back)
+			object_normal *= -1;
+		else
+			object_color.Set(0, 0, 0);
+	}
+	Vec3f color;
+	Vec3f::Mult(color, object_color, ambient_light);
+	for (int i = 0; i < num_lights; i++)
+	{
+		Vec3f light_dir;
+		Vec3f light_col;
+		lights[i]->getIllumination(h.getIntersectionPoint(), light_dir, light_col);
+		float clamped = object_normal.Dot3(light_dir);
+		if (clamped < 0)
+			clamped = 0;
+		Vec3f single_light_color;
+		Vec3f::Mult(single_light_color, light_col, object_color);
+		single_light_color *= clamped;
+		color += single_light_color;
+	}
+	return color;
+}
+
 
 int main(int argc, char *argv[])
 {
-	char *input_file = "scene1_06.txt";
+	char *input_file = nullptr;
 	int width = 200;
 	int height = 200;
-	char *output_file = "output1_06.tga";
+	char *output_file = nullptr;
 	float depth_min = 3;
 	float depth_max = 7;
-	char *depth_file = "depth1_06.tga";
-
-	// sample command line:
-	// raytracer -input scene1_1.txt -size 200 200 -output output1_01.tga -depth 9 10 depth1_1.tga
+	char *depth_file = nullptr;
+	char *normal_file = nullptr;
+	bool is_shade_back = false;
 
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-input")) {
@@ -46,13 +76,29 @@ int main(int argc, char *argv[])
 			i++; assert(i < argc);
 			depth_file = argv[i];
 		}
+		else if (!strcmp(argv[i], "-normals")) {
+			i++; assert(i < argc);
+			normal_file = argv[i];
+		}
+		else if (!strcmp(argv[i], "-shade_back")) {
+			is_shade_back = true;
+		}
 		else {
 			printf("whoops error with command line argument %d: '%s'\n", i, argv[i]);
 			assert(0);
 		}
 	}
+
+	/*read arguments from parser*/
 	SceneParser parser(input_file);
 	Camera *camera = parser.getCamera();
+	int num_lights = parser.getNumLights();
+	Light **lights = (Light**) new Light* [num_lights];
+	for (int i = 0; i < num_lights; i++)
+	{
+		lights[i] = parser.getLight(i);
+	}
+	Vec3f ambient_light = parser.getAmbientLight();
 	Vec3f background_color = parser.getBackgroundColor();
 	int num_materials = parser.getNumMaterials();
 	Material **materials = (Material**) new Material* [num_materials];
@@ -62,11 +108,16 @@ int main(int argc, char *argv[])
 	}
 	Group *obj_group = parser.getGroup();
 
+	/*create image instances*/
 	int tmin = camera->GetTMin();
 	Image image(width, height);
-	Image image2(width, height);
+	Image depth_image(width, height);
+	Image normal_image(width, height);
 	image.SetAllPixels(background_color);
-	image2.SetAllPixels(Vec3f(0,0,0));
+	if(depth_file)
+		depth_image.SetAllPixels(Vec3f(0,0,0));
+	if(normal_file)
+		normal_image.SetAllPixels(Vec3f(0,0,0));
 	for (int j = 0; j < height; j++)
 	{
 		for (int i = 0; i < width; i++)
@@ -79,17 +130,29 @@ int main(int argc, char *argv[])
 			bool is_intersect = obj_group->intersect(ray, hit, tmin);
 			if (is_intersect)
 			{
-				image.SetPixel(i, j, hit.getMaterial()->getDiffuseColor());
+				Vec3f diffuse_color = compute_diffuse_color(hit, ray, ambient_light, num_lights, lights, is_shade_back);
+				image.SetPixel(i, j, diffuse_color);
+
 				float t = hit.getT();
-				if (t<depth_max && t>depth_min)
+				if (depth_file && t<depth_max && t>depth_min)
 				{
 					float gray_value = 1 - (t - depth_min) / (depth_max - depth_min);
 					Vec3f color(gray_value, gray_value, gray_value);
-					image2.SetPixel(i, j, color);
+					depth_image.SetPixel(i, j, color);
+				}
+				if (normal_file)
+				{
+					Vec3f normal_color = hit.getNormal();
+					normal_color.Set(abs(normal_color.x()), abs(normal_color.y()), abs(normal_color.z()));
+					normal_image.SetPixel(i, j, normal_color);
 				}
 			}
 		}
 	}
+
 	image.SaveTGA(output_file);
-	image2.SaveTGA(depth_file);
+	if(depth_file)
+		depth_image.SaveTGA(depth_file);
+	if (normal_file)
+		normal_image.SaveTGA(normal_file);
 }

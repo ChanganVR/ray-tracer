@@ -25,5 +25,8 @@ public:
 		Vec3f origin = center_ + (point.x() - 0.5) * size_ * horizontal_ + (point.y() - 0.5) * size_ * up_;
 		return Ray(origin, direction_);
 	}
-	virtual float GetTMin()const { return 0; }
+	virtual float GetTMin()const 
+	{
+		return -INT_MAX;//assume ray start from negative infinity
+	}
 };

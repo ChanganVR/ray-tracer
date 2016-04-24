@@ -10,7 +10,7 @@ private:
 	vector<Object3D*> pobj_;
 public:
 	Group(int n) :Object3D(NULL){ obj_num_ = n; }
-	void AddObject(int index, Object3D *obj) { pobj_.push_back(obj); };
+	void addObject(int index, Object3D *obj) { pobj_.push_back(obj); };
 	virtual bool intersect(const Ray &r, Hit &h, float tmin)
 	{
 		bool is_intersect = false;

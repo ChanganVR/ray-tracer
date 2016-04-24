@@ -2,13 +2,14 @@
 
 bool Sphere::intersect(const Ray &r, Hit &h, float tmin)
 {
-	const Vec3f origin = r.getOrigin();
-	const Vec3f direction = r.getDirection();
+	Vec3f origin = r.getOrigin();
+	Vec3f direction = r.getDirection();
+	direction.Normalize();
 
 	Vec3f origin_to_center = center_ - origin;
 	float val_origin_to_center = origin_to_center.Dot3(origin_to_center);
 	bool is_inside = false;
-	if (val_origin_to_center < sqrt(radius_))//origin point is inside the sphere
+	if (val_origin_to_center < square(radius_))//origin point is inside the sphere
 		is_inside = true;
 
 	float t = INT_MAX;
@@ -38,7 +39,9 @@ bool Sphere::intersect(const Ray &r, Hit &h, float tmin)
 			return false;
 		else
 		{
-			h.set(t, material_, r);
+			Vec3f normal = r.pointAtParameter(t) - center_;
+			normal.Normalize();
+			h.set(t, material_, normal, r);
 			return true;
 		}
 	}
