@@ -10,6 +10,12 @@
 #include "camera.h"
 #include "group.h"
 #include "light.h"
+#include "glCanvas.h"
+
+bool is_tessellation = false;
+bool is_gouraud = false;
+float theta_time = 0;
+float phi_time = 0;
 
 Vec3f compute_diffuse_color(const Hit &h, const Ray &r, Vec3f ambient_light, int num_lights, Light **lights, bool is_shade_back)
 {
@@ -52,6 +58,7 @@ int main(int argc, char *argv[])
 	char *depth_file = nullptr;
 	char *normal_file = nullptr;
 	bool is_shade_back = false;
+	bool is_gui = false;
 
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-input")) {
@@ -83,6 +90,19 @@ int main(int argc, char *argv[])
 		else if (!strcmp(argv[i], "-shade_back")) {
 			is_shade_back = true;
 		}
+		else if (!strcmp(argv[i], "-gui")) {
+			is_gui = true;
+		}
+		else if (!strcmp(argv[i], "-tessellation")) {
+			i++; assert(i < argc);
+			theta_time = atof(argv[i]);
+			i++; assert(i < argc);
+			phi_time = atof(argv[i]);
+			is_tessellation = true;
+		}
+		else if (!strcmp(argv[i], "-gouraud")) {
+			is_gouraud = true;
+		}
 		else {
 			printf("whoops error with command line argument %d: '%s'\n", i, argv[i]);
 			assert(0);
@@ -91,6 +111,7 @@ int main(int argc, char *argv[])
 
 	/*read arguments from parser*/
 	SceneParser parser(input_file);
+
 	Camera *camera = parser.getCamera();
 	int num_lights = parser.getNumLights();
 	Light **lights = (Light**) new Light* [num_lights];
@@ -149,10 +170,16 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-
 	image.SaveTGA(output_file);
 	if(depth_file)
 		depth_image.SaveTGA(depth_file);
 	if (normal_file)
 		normal_image.SaveTGA(normal_file);
+
+	/*real-time rendering*/
+	GLCanvas canvas;
+	if (is_gui)
+	{
+		canvas.initialize(&parser, nullptr);
+	}
 }

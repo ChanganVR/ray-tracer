@@ -10,4 +10,5 @@ public:
 	Object3D(Material *material):material_(material){}
 	~Object3D(){}
 	virtual bool intersect(const Ray &r, Hit &h, float tmin) = 0;
+	virtual void paint() = 0;
 };

@@ -1,4 +1,5 @@
 #include "transform.h"
+#include "gl/glut.h"
 
 Transform::Transform(Matrix & m, Object3D * o)
 	:rev_matrix_(m), object_(o), Object3D(nullptr)
@@ -36,4 +37,15 @@ bool Transform::intersect(const Ray & r, Hit & h, float tmin)
 		h.set(h.getT(), h.getMaterial(), trans_normal, r);
 	}
 	return is_intersect;
+}
+
+void Transform::paint()
+{
+	//TODO: Matrix trans_matrix = Matrix(rev_matrix_);
+	glPushMatrix();
+	GLfloat *glMatrix = rev_matrix_.glGet();
+	glMultMatrixf(glMatrix);
+	object_->paint();
+	delete[] glMatrix;
+	glPopMatrix();
 }

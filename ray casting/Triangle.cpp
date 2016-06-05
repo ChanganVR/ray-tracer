@@ -1,5 +1,6 @@
 #include "Triangle.h"
 #include "plane.h"
+#include "gl/glut.h"
 
 Triangle::Triangle(Vec3f & a, Vec3f & b, Vec3f & c, Material * m)
 	:Object3D(m), v0_(a), v1_(b), v2_(c)
@@ -39,4 +40,15 @@ bool Triangle::intersect(const Ray & r, Hit & h, float tmin)
 	}
 	else
 		return false;
+}
+
+void Triangle::paint()
+{
+	material_->glSetMaterial();
+	glBegin(GL_TRIANGLES);
+	glNormal3f(normal_.x(), normal_.y(), normal_.z());
+	glVertex3f(v0_.x(), v0_.y(), v0_.z());
+	glVertex3f(v1_.x(), v1_.y(), v1_.z());
+	glVertex3f(v2_.x(), v2_.y(), v2_.z());
+	glEnd();
 }

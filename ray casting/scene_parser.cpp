@@ -8,6 +8,7 @@
 #include "perspectivecamera.h"
 #include "light.h"
 #include "material.h"
+#include "PhongMaterial.h"
 #include "object3d.h"
 #include "group.h" 
 #include "sphere.h"
@@ -15,7 +16,7 @@
 #include "triangle.h"
 #include "transform.h"
 
-#define M_PI 3.1415926
+#define  M_PI 3.1415926
 #define DegreesToRadians(x) ((M_PI * x) / 180.0f)
 
 // ====================================================================
@@ -45,7 +46,7 @@ SceneParser::SceneParser(const char* filename) {
 	fclose(file);
 	file = NULL;
 
-	// if no lights are specified, set ambient light to white 
+	// if no lights are specified, set ambient light to white
 	// (do solid color ray casting)
 	if (num_lights == 0) {
 		printf("WARNING:  No lights specified\n");
@@ -216,8 +217,9 @@ void SceneParser::parseMaterials() {
 	int count = 0;
 	while (num_materials > count) {
 		getToken(token);
-		if (!strcmp(token, "Material")) {
-			materials[count] = parseMaterial();
+		if (!strcmp(token, "Material") ||
+			!strcmp(token, "PhongMaterial")) {
+			materials[count] = parsePhongMaterial();
 		}
 		else {
 			printf("Unknown token in parseMaterial: '%s'\n", token);
@@ -229,21 +231,29 @@ void SceneParser::parseMaterials() {
 }
 
 
-Material* SceneParser::parseMaterial() {
+Material* SceneParser::parsePhongMaterial() {
 	char token[MAX_PARSER_TOKEN_LENGTH];
 	Vec3f diffuseColor(1, 1, 1);
+	Vec3f specularColor(0, 0, 0);
+	float exponent = 1;
 	getToken(token); assert(!strcmp(token, "{"));
 	while (1) {
 		getToken(token);
 		if (!strcmp(token, "diffuseColor")) {
 			diffuseColor = readVec3f();
 		}
+		else if (!strcmp(token, "specularColor")) {
+			specularColor = readVec3f();
+		}
+		else if (!strcmp(token, "exponent")) {
+			exponent = readFloat();
+		}
 		else {
 			assert(!strcmp(token, "}"));
 			break;
 		}
 	}
-	Material *answer = new Material(diffuseColor);
+	Material *answer = new PhongMaterial(diffuseColor, specularColor, exponent);
 	return answer;
 }
 
@@ -366,7 +376,6 @@ Triangle* SceneParser::parseTriangle() {
 	assert(current_material != NULL);
 	return new Triangle(v0, v1, v2, current_material);
 }
-
 
 Group* SceneParser::parseTriangleMesh() {
 	char token[MAX_PARSER_TOKEN_LENGTH];
@@ -499,7 +508,6 @@ Transform* SceneParser::parseTransform() {
 	getToken(token); assert(!strcmp(token, "}"));
 	return new Transform(matrix, object);
 }
-
 
 // ====================================================================
 // ====================================================================

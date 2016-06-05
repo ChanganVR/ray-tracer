@@ -13,7 +13,8 @@ private:
 public:
 	Plane(Vec3f &normal, float d, Material *m);
 	Plane(const Vec3f &v0, const Vec3f &normal, Material *m);
-	bool intersect(const Ray &r, Hit &h, float tmin);
+	virtual bool intersect(const Ray &r, Hit &h, float tmin);
+	virtual void paint();
 };
 
 #endif 

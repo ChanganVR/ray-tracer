@@ -14,6 +14,7 @@ private:
 public:
 	Transform(Matrix &m, Object3D *o);
 	bool intersect(const Ray &r, Hit &h, float tmin);
+	virtual void paint();
 };
 
 #endif 

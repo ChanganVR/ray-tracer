@@ -1,4 +1,3 @@
-#pragma once
 #ifndef _SceneParser_H_
 #define _SceneParser_H_
 
@@ -56,7 +55,7 @@ private:
 	void parseLights();
 	Light* parseDirectionalLight();
 	void parseMaterials();
-	Material* parseMaterial();
+	Material* parsePhongMaterial();
 
 	Object3D* parseObject(char token[MAX_PARSER_TOKEN_LENGTH]);
 	Group* parseGroup();

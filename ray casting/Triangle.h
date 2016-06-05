@@ -17,7 +17,8 @@ private:
 	Vec3f normal_;
 public:
 	Triangle(Vec3f &a, Vec3f &b, Vec3f &c, Material *m);
-	bool intersect(const Ray &r, Hit &h, float tmin);
+	virtual bool intersect(const Ray &r, Hit &h, float tmin);
+	virtual void paint();
 };
 
 #endif 
