@@ -160,7 +160,7 @@
     <ClCompile Include="image.cpp" />
     <ClCompile Include="light.cpp" />
     <ClCompile Include="matrix.cpp" />
-    <ClCompile Include="PhongMaterial.cpp" />
+    <ClCompile Include="PhongMateria.cpp" />
     <ClCompile Include="PhongMaterial.h" />
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="scene_parser.cpp" />

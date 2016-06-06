@@ -25,7 +25,7 @@ public:
 	PhongMaterial(const Vec3f &diffuseColor, const Vec3f &specularColor, float exponent) 
 		:Material(diffuseColor), specularColor_(specularColor), exponent_(exponent) {}
 	Vec3f getSpecularColor(void) const { return specularColor_; }
-	virtual Vec3f Shade(const Ray &ray, const Hit &hit, const Vec3f &dirToLight, const Vec3f &lightColor) const { return Vec3f(); };
+	virtual Vec3f Shade(const Ray &ray, const Hit &hit, const Vec3f &dirToLight, const Vec3f &lightColor) const;
 	virtual void glSetMaterial(void) const;
 };
 

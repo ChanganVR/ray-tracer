@@ -17,36 +17,6 @@ bool is_gouraud = false;
 float theta_time = 0;
 float phi_time = 0;
 
-Vec3f compute_diffuse_color(const Hit &h, const Ray &r, Vec3f ambient_light, int num_lights, Light **lights, bool is_shade_back)
-{
-	Vec3f object_color = h.getMaterial()->getDiffuseColor();
-	Vec3f object_normal = h.getNormal();
-	if (object_normal.Dot3(r.getDirection()) > 0)//view point is in the backside of the object
-	{
-		if (is_shade_back)
-			object_normal *= -1;
-		else
-			object_color.Set(0, 0, 0);
-	}
-	Vec3f color;
-	Vec3f::Mult(color, object_color, ambient_light);
-	for (int i = 0; i < num_lights; i++)
-	{
-		Vec3f light_dir;
-		Vec3f light_col;
-		lights[i]->getIllumination(h.getIntersectionPoint(), light_dir, light_col);
-		float clamped = object_normal.Dot3(light_dir);
-		if (clamped < 0)
-			clamped = 0;
-		Vec3f single_light_color;
-		Vec3f::Mult(single_light_color, light_col, object_color);
-		single_light_color *= clamped;
-		color += single_light_color;
-	}
-	return color;
-}
-
-
 int main(int argc, char *argv[])
 {
 	char *input_file = nullptr;
@@ -151,8 +121,15 @@ int main(int argc, char *argv[])
 			bool is_intersect = obj_group->intersect(ray, hit, tmin);
 			if (is_intersect)
 			{
-				Vec3f diffuse_color = compute_diffuse_color(hit, ray, ambient_light, num_lights, lights, is_shade_back);
-				image.SetPixel(i, j, diffuse_color);
+				Vec3f pixel_color = ambient_light * hit.getMaterial()->getDiffuseColor();
+				for (int i = 0; i < num_lights; i++)
+				{
+					Vec3f dir_to_light;
+					Vec3f light_color;
+					lights[i]->getIllumination(hit.getIntersectionPoint(), dir_to_light, light_color);
+					pixel_color += hit.getMaterial()->Shade(ray, hit, dir_to_light, light_color);
+				}
+				image.SetPixel(i, j, pixel_color);
 
 				float t = hit.getT();
 				if (depth_file && t<depth_max && t>depth_min)

@@ -15,46 +15,41 @@ extern int SPECULAR_FIX_WHICH_PASS;
 #include "PhongMaterial.h"
 #include "gl/glut.h"
 
-//Vec3f PhongMaterial::Shade(const Ray & ray, const Hit & hit, const Vec3f & dirToLight, const Vec3f & lightColor) const
-//{
-//	Vec3f object_color = hit.getMaterial()->getDiffuseColor();
-//	Vec3f object_normal = hit.getNormal();
-//
-//	////view point is in the backside of the object
-//	//if (object_normal.Dot3(ray.getDirection()) > 0)
-//	//{
-//	//	object_color.Set(0, 0, 0);
-//	//}
-//
-//	//Vec3f view_color;
-//	////ambient light 
-//	////Vec3f ambient_color;
-//	////Vec3f::Mult(ambient_color, object_color, lightColor);
-//
-//	////diffuse reflection
-//	//float clamped = object_normal.Dot3(dirToLight);
-//	//if (clamped < 0)
-//	//	clamped = 0;
-//	//Vec3f diffuse_color;
-//	//Vec3f::Mult(diffuse_color, lightColor, object_color);
-//	//diffuse_color *= clamped;
-//
-//	////specular reflection
-//	//Vec3f halfway_vector = dirToLight - ray.getDirection();
-//	//halfway_vector.Normalize();
-//	//clamped = object_normal.Dot3(halfway_vector);
-//	//if (clamped < 0)
-//	//	clamped = 0;
-//	//else
-//	//	clamped = pow(clamped, exponent_);
-//	//Vec3f specular_color;
-//	//Vec3f::Mult(specular_color, lightColor, object_color);
-//	//specular_color *= clamped;
-//
-//	//view_color += diffuse_color + specular_color;
-//	//return view_color;
-//	return Vec3f();
-//}
+Vec3f PhongMaterial::Shade(const Ray & ray, const Hit & hit, const Vec3f & dirToLight, const Vec3f & lightColor) const
+{
+	Vec3f object_color;
+	Vec3f object_normal = hit.getNormal();
+
+	//view point is in the backside of the object
+	if (object_normal.Dot3(ray.getDirection()) > 0)
+	{
+		object_color.Set(0, 0, 0);
+	}
+
+	Vec3f view_color;
+	//diffuse reflection
+	float clamped = object_normal.Dot3(dirToLight);
+	if (clamped < 0)
+		clamped = 0;
+	Vec3f diffuse_color;
+	Vec3f::Mult(diffuse_color, lightColor, hit.getMaterial()->getDiffuseColor());
+	diffuse_color *= clamped;
+
+	//specular reflection
+	Vec3f halfway_vector = dirToLight - ray.getDirection();
+	halfway_vector.Normalize();
+	clamped = object_normal.Dot3(halfway_vector);
+	if (clamped < 0)
+		clamped = 0;
+	else
+		clamped = pow(clamped, exponent_);
+	Vec3f specular_color;
+	Vec3f::Mult(specular_color, lightColor, specularColor_);
+	specular_color *= clamped;
+
+	object_color += diffuse_color + specular_color;
+	return object_color;
+}
 
 
 // ====================================================================
